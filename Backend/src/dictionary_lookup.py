@@ -20,20 +20,14 @@ def setup_wordnet():
 def lookup_definitions(processed_data: dict) -> dict:
     """
     Looks up definitions and parts of speech for words using nltk.corpus.wordnet.
+    Uses context-aware POS tags if available.
     
     Args:
-        processed_data (dict): Dictionary mapping words to their context.
-                               Example: {"genius": {"context": "..."}}
+        processed_data (dict): Dictionary mapping words to their context and POS.
+                               Example: {"genius": {"context": "...", "pos": "n"}}
                                
     Returns:
         dict: Enriched dictionary with part_of_speech and definition.
-              Example: {
-                  "genius": {
-                      "context": "...",
-                      "part_of_speech": "Noun",
-                      "definition": "..."
-                  }
-              }
     """
     setup_wordnet()
     enriched_data = {}
@@ -50,9 +44,19 @@ def lookup_definitions(processed_data: dict) -> dict:
     for word, data in processed_data.items():
         logger.info(f"Looking up definition for: {word}...")
         try:
-            synsets = wordnet.synsets(word)
+            target_pos = data.get("pos")
+            
+            # Try fetching synsets with specific POS if provided
+            synsets = []
+            if target_pos:
+                synsets = wordnet.synsets(word, pos=target_pos)
+            
+            # Fallback to all synsets if no POS-specific match or no POS provided
+            if not synsets:
+                synsets = wordnet.synsets(word)
+                
             if synsets:
-                # Get the first synset (the most common meaning)
+                # Get the first synset (the most common meaning for the POS/word)
                 syn = synsets[0]
                 
                 # Extract Part of Speech and map it to a full word

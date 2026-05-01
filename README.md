@@ -2,7 +2,7 @@
 
 A professional Python-based CLI tool designed to streamline language learning by automating the extraction of target vocabulary from news articles and generating ready-to-use Anki flashcards (.apkg).
 
-![Anki Demo](assets/1000030880.jpg)
+![Anki Demo](assets/preview.png)
 
 ## 🌟 Key Features
 
