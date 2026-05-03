@@ -2,11 +2,13 @@ import argparse
 import logging
 import sys
 import os
+from itertools import islice
 
 from src.scraper import fetch_article
 from src.processor import process_data, update_known_words
 from src.dictionary_lookup import lookup_definitions
 from src.anki_generator import generate_anki_deck
+from src.exporter import export_to_csv
 
 def setup_logging():
     """Configures the logging format and level."""
@@ -47,6 +49,17 @@ def main():
         type=str,
         help="A comma-separated list of words to add to known_words.txt. If provided, the tool exits after adding."
     )
+    parser.add_argument(
+        "--max-words",
+        type=int,
+        default=0,
+        help="Maximum number of words to extract. 0 means no limit."
+    )
+    parser.add_argument(
+        "--export-csv",
+        type=str,
+        help="Export the extracted vocabulary to a CSV file."
+    )
     args = parser.parse_args()
 
     # Handle --add-known logic
@@ -70,6 +83,8 @@ def main():
     logger.info("Starting Vocabulary Extraction Pipeline")
     logger.info(f"Target URL: {url}")
     logger.info(f"Output File: {output_filename}")
+    if args.max_words > 0:
+        logger.info(f"Limit: {args.max_words} words")
     logger.info("==================================================")
 
     try:
@@ -100,6 +115,17 @@ def main():
             sys.exit(0)
 
         logger.info(f"Enriched {len(enriched_data)} words with definitions.")
+
+        # Apply --max-words limit if provided
+        if args.max_words > 0 and len(enriched_data) > args.max_words:
+            logger.info(f"Applying limit of {args.max_words} words.")
+            # slice the dictionary
+            enriched_data = dict(islice(enriched_data.items(), args.max_words))
+
+        # Handle --export-csv logic
+        if args.export_csv:
+            logger.info(f"--- Exporting to CSV: {args.export_csv} ---")
+            export_to_csv(enriched_data, args.export_csv)
 
         # Phase 4: Anki Generation
         logger.info("--- Phase 4: Generating Anki Deck ---")

@@ -41,9 +41,15 @@ Run the tool from the `Backend/` directory using `uv run`.
 uv run main.py --url "https://e.vnexpress.net/news/news/education/vietnam-wins-four-gold-medals-at-international-chemistry-olympiad-4775486.html"
 ```
 
-### Custom Output
+### Custom Output & Export
+You can customize the output filename, limit the number of words, or export to CSV:
+
 ```bash
-uv run main.py --url "https://www.bbc.com/news/articles/c0jje79z7jno" --output "bbc_vocab.apkg"
+# Limit to 30 words and export to CSV
+uv run main.py --url "https://..." --max-words 30 --export-csv "my_words.csv"
+
+# Custom Anki output filename
+uv run main.py --url "https://..." --output "custom_deck.apkg"
 ```
 
 ### Managing Known Words
@@ -63,6 +69,8 @@ Automate the update of `known_words.txt` to streamline your learning process:
 - `--output`: (Optional) The name of the output `.apkg` file.
 - `--mark-known`: (Optional) Automatically add extracted words to `known_words.txt`.
 - `--add-known`: (Optional) A comma-separated list of words to add to `known_words.txt`.
+- `--max-words`: (Optional) Maximum number of words to extract (e.g., `30`).
+- `--export-csv`: (Optional) Filename to export vocabulary to CSV.
 
 ## 🧪 Testing
 
@@ -88,7 +96,8 @@ NewsToAnki/
 │       ├── scraper.py       # Robust Scraper (Retries, Fake UA)
 │       ├── processor.py     # POS Tagging, Smart Truncation
 │       ├── dictionary_lookup.py # Context-aware WordNet lookup
-│       └── anki_generator.py    # .apkg Generation
+│       ├── anki_generator.py    # .apkg Generation
+│       └── exporter.py      # CSV Export Logic
 ├── assets/                  # Documentation Assets
 └── README.md                # Project Documentation
 ```
