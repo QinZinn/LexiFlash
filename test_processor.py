@@ -74,6 +74,32 @@ def test_truncation():
 
     print("Verification successful! Smart truncation logic is working correctly.")
 
+def test_proper_noun_filtering():
+    article_data = {
+        "data": [
+            {
+                "sentence": "Robert and Sarah visited the beautiful city of Paris.",
+                "words": [
+                    "Robert", "and", "Sarah", "visited", "the",
+                    "beautiful", "city", "of", "Paris",
+                ],
+            }
+        ]
+    }
+
+    result = process_data(article_data)
+
+    proper_nouns = {"robert", "sarah", "paris"}
+    assert proper_nouns.isdisjoint(result.keys()), (
+        f"Proper nouns should be excluded, but found: {proper_nouns & result.keys()}"
+    )
+
+    assert "beautiful" in result
+    assert result["beautiful"]["original_token"] == "beautiful"
+
+    print("Verification successful! Proper nouns are filtered out correctly.")
+
 if __name__ == "__main__":
     test_lemmatization()
     test_truncation()
+    test_proper_noun_filtering()
