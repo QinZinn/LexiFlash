@@ -42,7 +42,7 @@ def lookup_definitions(processed_data: dict) -> dict:
     }
     
     for word, data in processed_data.items():
-        logger.info(f"Looking up definition for: {word}...")
+        logger.debug(f"Looking up definition for: {word}...")
         try:
             target_pos = data.get("pos")
             

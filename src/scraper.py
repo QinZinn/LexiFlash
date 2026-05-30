@@ -9,12 +9,17 @@ from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_excep
 
 # Setup logger for this module
 logger = logging.getLogger(__name__)
+_NLTK_SETUP_DONE = False
 
 def setup_nltk():
     """
     Ensures that required NLTK datasets/models are downloaded.
     We need 'punkt' or 'punkt_tab' for sentence and word tokenization.
     """
+    global _NLTK_SETUP_DONE
+    if _NLTK_SETUP_DONE:
+        return
+
     try:
         nltk.data.find('tokenizers/punkt_tab')
     except (LookupError, OSError):
@@ -22,6 +27,8 @@ def setup_nltk():
         nltk.download('punkt_tab', quiet=True)
         # Fallback to punkt if punkt_tab isn't fully resolving in older versions
         nltk.download('punkt', quiet=True)
+
+    _NLTK_SETUP_DONE = True
 
 class BaseScraper:
     """
@@ -159,13 +166,15 @@ class GenericScraper(BaseScraper):
     Fallback scraper for unknown domains.
     """
     def extract_title_and_content(self, soup: BeautifulSoup) -> tuple[str, str]:
-        title_tag = soup.find('title')
-        title = title_tag.text.strip() if title_tag else "Unknown Title"
-        
-        # Generic fallback: just grab all paragraphs
-        paragraphs = soup.find_all('p')
-        content = " ".join([p.text.strip() for p in paragraphs if p.text.strip()])
-        return title, content
+        try:
+            title_tag = soup.find('title')
+            title = title_tag.text.strip() if title_tag else "Unknown Title"
+
+            paragraphs = soup.find_all('p')
+            content = " ".join([p.text.strip() for p in paragraphs if p.text.strip()])
+            return title, content
+        except Exception:
+            return "Unknown Title", "Could not extract content."
 
 def get_scraper_for_url(url: str) -> BaseScraper:
     """

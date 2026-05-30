@@ -10,6 +10,7 @@ dependencies = [
     "genanki==0.13.0",
     "maturin>=1.13.3",
     "nltk==3.8.1",
+    "regex>=2026.4.4",
     "requests==2.31.0",
     "tenacity>=9.1.4",
 ]

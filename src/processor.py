@@ -1,4 +1,5 @@
 import logging
+import os
 import nltk
 import newstoanki_rs
 from nltk.corpus import stopwords
@@ -6,12 +7,18 @@ from nltk.stem import WordNetLemmatizer
 from nltk.corpus import wordnet
 
 logger = logging.getLogger(__name__)
+_NLTK_SETUP_DONE = False
+_KNOWN_WORDS_CACHE = {}
 
 def setup_nltk():
     """
     Ensures that required NLTK datasets/models are downloaded.
     Specifically checks for the 'stopwords', 'wordnet', 'omw-1.4', 'punkt', and 'averaged_perceptron_tagger' corpora.
     """
+    global _NLTK_SETUP_DONE
+    if _NLTK_SETUP_DONE:
+        return
+
     resources = [
         ('corpora/stopwords', 'stopwords'),
         ('corpora/wordnet', 'wordnet'),
@@ -26,6 +33,8 @@ def setup_nltk():
         except (LookupError, OSError):
             logger.info(f"Downloading NLTK {pkg} corpus...")
             nltk.download(pkg, quiet=True)
+
+    _NLTK_SETUP_DONE = True
 
 def get_wordnet_pos(treebank_tag):
     """
@@ -54,16 +63,30 @@ def load_known_words(filepath: str) -> set:
         set: A set of lowercase known words.
     """
     try:
+        mtime = os.path.getmtime(filepath)
+    except FileNotFoundError:
+        mtime = None
+
+    cached = _KNOWN_WORDS_CACHE.get(filepath)
+    if cached and cached[0] == mtime:
+        return cached[1]
+
+    try:
         with open(filepath, 'r', encoding='utf-8') as f:
             known_words = {line.strip().lower() for line in f if line.strip()}
         logger.info(f"Loaded {len(known_words)} known words from {filepath}.")
+        _KNOWN_WORDS_CACHE[filepath] = (mtime, known_words)
         return known_words
     except FileNotFoundError:
         logger.warning(f"{filepath} not found. Starting with an empty blacklist.")
-        return set()
+        known_words = set()
+        _KNOWN_WORDS_CACHE[filepath] = (mtime, known_words)
+        return known_words
     except Exception as e:
         logger.error(f"Error reading {filepath}: {e}. Starting with an empty blacklist.")
-        return set()
+        known_words = set()
+        _KNOWN_WORDS_CACHE[filepath] = (mtime, known_words)
+        return known_words
 
 def update_known_words(new_words_list: list, filepath: str = "known_words.txt"):
     """
@@ -85,6 +108,10 @@ def update_known_words(new_words_list: list, filepath: str = "known_words.txt"):
             for word in sorted_words:
                 f.write(f"{word}\n")
         logger.info(f"Successfully updated {filepath}. Total known words: {len(sorted_words)}.")
+        try:
+            _KNOWN_WORDS_CACHE[filepath] = (os.path.getmtime(filepath), set(sorted_words))
+        except FileNotFoundError:
+            _KNOWN_WORDS_CACHE.pop(filepath, None)
     except Exception as e:
         logger.error(f"Error writing to {filepath}: {e}")
 
