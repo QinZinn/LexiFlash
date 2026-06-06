@@ -174,7 +174,7 @@ class GenericScraper(BaseScraper):
             content = " ".join([p.text.strip() for p in paragraphs if p.text.strip()])
             return title, content
         except Exception:
-            return "Unknown Title", "Could not extract content."
+            return "Unknown Title", ""
 
 def get_scraper_for_url(url: str) -> BaseScraper:
     """

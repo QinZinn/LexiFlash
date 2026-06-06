@@ -4,7 +4,7 @@ use regex::Regex;
 use lazy_static::lazy_static;
 
 lazy_static! {
-    static ref VALID_WORD_RE: Regex = Regex::new(r"^[a-zA-ZÀ-ÿ]+$").unwrap();
+    static ref VALID_WORD_RE: Regex = Regex::new(r"^\p{L}+$").unwrap();
 }
 
 #[pyfunction]
