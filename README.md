@@ -7,7 +7,7 @@ LexiAnki is a hybrid Python + Rust CLI tool for extracting target vocabulary fro
 ## 🌟 Key Features
 
 - **Smart Scraping**: Built-in support for **VnExpress (English)** and **BBC News**, featuring a robust retry mechanism with exponential backoff and randomized User-Agents to prevent blocking.
-- **Local File Parsing**: Extract vocabulary from `.txt` and `.docx` files using the same downstream NLP pipeline as web scraping.
+- **Local File Parsing**: Extract vocabulary from `.txt`, `.docx`, `.pptx`, and `.pdf` files using the same downstream NLP pipeline as web scraping.
 - **Context-Aware NLP**: 
   - **POS Tagging**: Utilizes `nltk.pos_tag` to understand the grammatical context of each word.
   - **Smart Lemmatization**: Performs accurate base-form reduction based on Part-of-Speech.
@@ -54,8 +54,16 @@ uv run main.py --url "https://e.vnexpress.net/news/news/education/vietnam-wins-f
 ```
 
 ### Local File Input
+The `--file` flag accepts local `.txt`, `.docx`, `.pptx`, and `.pdf` files.
+
 ```bash
 uv run main.py --file "/path/to/article.docx"
+
+# Parse slides from a PowerPoint deck
+uv run main.py --file "/path/to/lesson-slides.pptx"
+
+# Parse text from a PDF document
+uv run main.py --file "/path/to/report.pdf"
 ```
 
 ### Custom Output & Export
@@ -83,12 +91,13 @@ Automate the update of `known_words.txt` to streamline your learning process:
 
 ### Arguments
 - `--url`: The URL of the news article to process.
-- `--file`: Path to a local `.txt` or `.docx` file to process.
+- `--file`: Path to a local `.txt`, `.docx`, `.pptx`, or `.pdf` file to process.
 - `--output`: (Optional) The name of the output `.apkg` file.
 - `--mark-known`: (Optional) Automatically add extracted words to `known_words.txt`.
 - `--add-known`: (Optional) A comma-separated list of words to add to `known_words.txt`.
 - `--max-words`: (Optional) Maximum number of words to extract (e.g., `30`).
 - `--export-csv`: (Optional) Filename to export vocabulary to CSV.
+- Exactly one of `--url` or `--file` must be provided for a pipeline run.
 
 ## 🧪 Testing
 
@@ -113,7 +122,7 @@ LexiAnki/
 │   ├── processor.py         # POS Tagging, Rust-backed filtering/truncation
 │   ├── dictionary_lookup.py # Context-aware WordNet lookup
 │   ├── anki_generator.py    # .apkg Generation
-│   ├── file_parser.py       # Local .txt/.docx parsing to scraper-compatible schema
+│   ├── file_parser.py       # Local .txt/.docx/.pptx/.pdf parsing to scraper-compatible schema
 │   └── exporter.py          # CSV Export Logic
 ├── lexianki_rs/             # High-Performance Rust Engine
 ├── assets/                  # Documentation Assets
