@@ -188,3 +188,7 @@ cython_debug/
 /lexianki_rs/target/
 /lexianki_rs/Cargo.lock
 *.pyd
+
+# Research artifacts (spikes) and local Rust wheels
+/spikes/
+/dist_rs/
