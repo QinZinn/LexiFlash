@@ -518,6 +518,28 @@ body::before {
   line-height: 1.5;
 }
 
+.success_box {
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(0, 220, 180, 0.24);
+  background: rgba(0, 220, 180, 0.09);
+  color: rgba(255,255,255,0.92);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.status_copy {
+  line-height: 1.55;
+}
+
+.status_row {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .result_meta {
   padding: 0 18px 14px 18px;
   display: flex;

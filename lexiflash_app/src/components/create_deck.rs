@@ -1,6 +1,7 @@
 use std::path::Path;
 
 use dioxus::prelude::*;
+use lexiflash_app::db;
 use lexianki_nlp::{LexiankiNlp, VocabularyEntry};
 use rfd::FileDialog;
 
@@ -22,6 +23,17 @@ struct DeckPreview {
     vocabulary: Vec<VocabularyEntry>,
 }
 
+enum CreateDeckResult {
+    Saved { preview: DeckPreview, deck_id: i64 },
+    SaveFailed { preview: DeckPreview, message: String },
+}
+
+#[derive(Clone, PartialEq, Eq)]
+enum SaveNotice {
+    Success { deck_id: i64, message: String },
+    Error(String),
+}
+
 #[component]
 pub fn CreateDeckScreen(on_show_dashboard: EventHandler<()>) -> Element {
     let mut mode = use_signal(|| InputMode::Url);
@@ -29,14 +41,27 @@ pub fn CreateDeckScreen(on_show_dashboard: EventHandler<()>) -> Element {
     let mut selected_file = use_signal(|| None::<String>);
     let mut result = use_signal(|| None::<DeckPreview>);
     let mut error = use_signal(|| None::<String>);
+    let mut save_notice = use_signal(|| None::<SaveNotice>);
 
     let mut process_url = {
         move || {
             error.set(None);
             result.set(None);
+            save_notice.set(None);
 
             match process_from_url(&url_input()) {
-                Ok(preview) => result.set(Some(preview)),
+                Ok(CreateDeckResult::Saved { preview, deck_id }) => {
+                    let vocab_count = preview.vocabulary.len();
+                    result.set(Some(preview));
+                    save_notice.set(Some(SaveNotice::Success {
+                        deck_id,
+                        message: format!("Đã lưu deck vào SQLite — {vocab_count} từ vựng."),
+                    }));
+                }
+                Ok(CreateDeckResult::SaveFailed { preview, message }) => {
+                    result.set(Some(preview));
+                    save_notice.set(Some(SaveNotice::Error(message)));
+                }
                 Err(err) => error.set(Some(err.to_string())),
             }
         }
@@ -46,6 +71,7 @@ pub fn CreateDeckScreen(on_show_dashboard: EventHandler<()>) -> Element {
         move || {
             error.set(None);
             result.set(None);
+            save_notice.set(None);
 
             let Some(path) = selected_file() else {
                 error.set(Some("Chưa chọn file đầu vào.".to_string()));
@@ -53,7 +79,18 @@ pub fn CreateDeckScreen(on_show_dashboard: EventHandler<()>) -> Element {
             };
 
             match process_from_file(&path) {
-                Ok(preview) => result.set(Some(preview)),
+                Ok(CreateDeckResult::Saved { preview, deck_id }) => {
+                    let vocab_count = preview.vocabulary.len();
+                    result.set(Some(preview));
+                    save_notice.set(Some(SaveNotice::Success {
+                        deck_id,
+                        message: format!("Đã lưu deck vào SQLite — {vocab_count} từ vựng."),
+                    }));
+                }
+                Ok(CreateDeckResult::SaveFailed { preview, message }) => {
+                    result.set(Some(preview));
+                    save_notice.set(Some(SaveNotice::Error(message)));
+                }
                 Err(err) => error.set(Some(err.to_string())),
             }
         }
@@ -169,6 +206,32 @@ pub fn CreateDeckScreen(on_show_dashboard: EventHandler<()>) -> Element {
                                     if let Some(message) = error() {
                                         div { class: "error_box", "{message}" }
                                     }
+
+                                    if let Some(notice) = save_notice() {
+                                        match notice {
+                                            SaveNotice::Success { deck_id, message } => rsx! {
+                                                div { class: "success_box",
+                                                    div { class: "status_copy", "{message}" }
+                                                    div { class: "status_row",
+                                                        div { class: "chip", "Deck #{deck_id}" }
+                                                        button {
+                                                            class: "pill",
+                                                            onclick: move |_| on_show_dashboard.call(()),
+                                                            span { "Về Dashboard" }
+                                                            span { class: "pill_icon", "↗" }
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            SaveNotice::Error(message) => rsx! {
+                                                div { class: "error_box",
+                                                    div { class: "status_copy",
+                                                        "Đã extract xong nhưng lưu SQLite thất bại. {message}"
+                                                    }
+                                                }
+                                            },
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -221,27 +284,38 @@ pub fn CreateDeckScreen(on_show_dashboard: EventHandler<()>) -> Element {
     }
 }
 
-fn process_from_url(url: &str) -> anyhow::Result<DeckPreview> {
+fn process_from_url(url: &str) -> anyhow::Result<CreateDeckResult> {
     let trimmed = url.trim();
     if trimmed.is_empty() {
         anyhow::bail!("URL không được để trống.");
     }
 
     let article = url_scraper::scrape_url(trimmed)?;
-    build_preview(article)
+    build_preview_and_save(article, "url")
 }
 
-fn process_from_file(path: &str) -> anyhow::Result<DeckPreview> {
+fn process_from_file(path: &str) -> anyhow::Result<CreateDeckResult> {
     let trimmed = path.trim();
     if trimmed.is_empty() {
         anyhow::bail!("Đường dẫn file không được để trống.");
     }
 
     let article = file_parser::parse_file(Path::new(trimmed))?;
-    build_preview(article)
+    build_preview_and_save(article, "file")
 }
 
-fn build_preview(article: ArticleContent) -> anyhow::Result<DeckPreview> {
+fn build_preview_and_save(article: ArticleContent, source_type: &str) -> anyhow::Result<CreateDeckResult> {
+    let preview = build_preview(&article)?;
+    match persist_deck(source_type, &article, &preview.vocabulary) {
+        Ok(deck_id) => Ok(CreateDeckResult::Saved { preview, deck_id }),
+        Err(err) => Ok(CreateDeckResult::SaveFailed {
+            preview,
+            message: format!("{err:#}"),
+        }),
+    }
+}
+
+fn build_preview(article: &ArticleContent) -> anyhow::Result<DeckPreview> {
     let source = article.url.clone();
     let sentence_count = article.sentences.len();
     let title = article.title.clone();
@@ -254,4 +328,21 @@ fn build_preview(article: ArticleContent) -> anyhow::Result<DeckPreview> {
         sentence_count,
         vocabulary,
     })
+}
+
+fn persist_deck(
+    source_type: &str,
+    article: &ArticleContent,
+    entries: &[VocabularyEntry],
+) -> anyhow::Result<i64> {
+    let db_path = db::default_db_path()?;
+    let conn = db::init_db(&db_path)?;
+    db::save_deck(
+        &conn,
+        &article.title,
+        source_type,
+        &article.url,
+        article.sentences.len(),
+        entries,
+    )
 }
