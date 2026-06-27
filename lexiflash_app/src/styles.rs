@@ -273,6 +273,8 @@ body::before {
   gap: 10px;
   overflow-y: auto;
   overflow-x: hidden;
+  will-change: scroll-position;
+  contain: layout paint;
 }
 
 .deck_row {
@@ -284,11 +286,10 @@ body::before {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  transition: transform 700ms cubic-bezier(0.32,0.72,0,1), border-color 700ms cubic-bezier(0.32,0.72,0,1), background 700ms cubic-bezier(0.32,0.72,0,1);
+  transition: border-color 140ms ease-out, background-color 140ms ease-out;
 }
 
 .deck_row:hover {
-  transform: translateY(-1px);
   border-color: rgba(255,255,255,0.14);
   background: rgba(0,0,0,0.30);
 }
