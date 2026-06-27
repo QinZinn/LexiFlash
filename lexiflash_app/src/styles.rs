@@ -178,6 +178,7 @@ body::before {
   border: 1px solid rgba(255,255,255,0.085);
   border-radius: var(--radius-xl);
   padding: 8px;
+  min-height: 0;
   box-shadow:
     0 16px 48px rgba(0,0,0,0.38),
     inset 0 1px 0 rgba(255,255,255,0.08);
@@ -185,6 +186,9 @@ body::before {
 
 .card {
   height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   border-radius: calc(var(--radius-xl) - 8px);
   background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.02));
   border: 1px solid rgba(255,255,255,0.08);
@@ -252,6 +256,8 @@ body::before {
 }
 
 .deck_list {
+  flex: 1;
+  min-height: 0;
   padding: 0 10px 12px 10px;
   display: flex;
   flex-direction: column;
@@ -314,10 +320,12 @@ body::before {
 .cta_card {
   position: relative;
   padding: 18px 18px;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  gap: 20px;
 }
 
 .cta_card::before {
