@@ -1,6 +1,6 @@
-# LexiAnki CLI
+# LexiFlash
 
-LexiAnki is a hybrid Python + Rust CLI tool for extracting target vocabulary from English news articles or local documents and generating ready-to-import Anki flashcards (.apkg).
+LexiFlash is a vocabulary extraction project with a legacy hybrid Python + Rust CLI and a Rust-native desktop app. The CLI still generates ready-to-import Anki flashcards (`.apkg`), while the desktop app work lives under `lexiflash_app/`.
 
 ![Anki Demo](assets/preview.png)
 
@@ -27,8 +27,8 @@ This project uses a Rust-based engine for high-performance text processing.
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/QinZinn/LexiAnki.git
-   cd LexiAnki
+   git clone https://github.com/QinZinn/lexiflash.git
+   cd lexiflash
    ```
 
 2. **Sync dependencies**:
@@ -110,7 +110,7 @@ uv run test_processor.py
 ## 📂 Project Structure
 
 ```text
-LexiAnki/
+LexiFlash/
 ├── .github/workflows/       # CI/CD (GitHub Actions)
 ├── main.py                  # CLI Entry Point
 ├── test_processor.py        # Unit Tests
@@ -124,7 +124,9 @@ LexiAnki/
 │   ├── anki_generator.py    # .apkg Generation
 │   ├── file_parser.py       # Local .txt/.docx/.pptx/.pdf parsing to scraper-compatible schema
 │   └── exporter.py          # CSV Export Logic
-├── lexianki_rs/             # High-Performance Rust Engine
+├── lexianki_rs/             # Legacy Rust extension for the Python CLI
+├── lexiflash_nlp/           # Rust-native NLP crate for the desktop pipeline
+├── lexiflash_app/           # Dioxus desktop application
 ├── assets/                  # Documentation Assets
 └── README.md                # Project Documentation
 ```

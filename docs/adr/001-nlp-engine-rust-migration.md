@@ -2,6 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-06-25
+- Note: project renamed from LexiAnki to LexiFlash on 2026-06-27. This ADR retains original naming for historical accuracy.
 
 ## Context
 

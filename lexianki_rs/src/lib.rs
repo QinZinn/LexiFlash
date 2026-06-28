@@ -32,7 +32,7 @@ fn substring_by_char_range(s: &str, start_char: usize, end_char: usize) -> Strin
 }
 
 // Legacy note: this crate remains the PyO3 bridge used by the Python CLI in
-// `main.py`/`src/processor.py`. The desktop app's Rust-native pipeline lives in
+// `main.py`/`src/processor.py`. The LexiFlash desktop app's Rust-native pipeline lives in
 // `lexiflash_nlp`, which keeps its own `truncate_context` copy because it cannot
 // depend on this extension module as a normal Rust library API.
 fn find_token_match(sentence: &str, target_token: &str) -> Option<(usize, usize)> {
