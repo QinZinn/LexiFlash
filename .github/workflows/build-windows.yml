@@ -68,15 +68,26 @@ jobs:
           @"
           @echo off
           setlocal
+          title LexiFlash
+          rem Portable launcher for the Windows release bundle.
+          rem Run this file after extracting the zip so LexiFlash can find its bundled NLP data.
           set "SCRIPT_DIR=%~dp0"
           set "WORDNET_ZIP_PATH=%SCRIPT_DIR%nlp-data\wordnet.zip"
           set "STOPWORDS_ENGLISH_PATH=%SCRIPT_DIR%nlp-data\stopwords-english"
           "%SCRIPT_DIR%LexiFlash.exe" %*
           "@ | Set-Content dist/LexiFlash/Launch-LexiFlash.bat
 
-      - name: Upload LexiFlash.exe artifact
+      - name: Package Windows release zip
+        shell: pwsh
+        run: |
+          if (Test-Path dist/LexiFlash-windows.zip) {
+            Remove-Item dist/LexiFlash-windows.zip -Force
+          }
+          Compress-Archive -Path dist/LexiFlash\* -DestinationPath dist/LexiFlash-windows.zip
+
+      - name: Upload LexiFlash Windows zip artifact
         uses: actions/upload-artifact@v4
         with:
           name: LexiFlash-windows-portable
-          path: dist/LexiFlash
+          path: dist/LexiFlash-windows.zip
           if-no-files-found: error
